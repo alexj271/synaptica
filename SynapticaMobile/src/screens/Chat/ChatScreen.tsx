@@ -1,147 +1,146 @@
-import React, {useCallback, useRef, useState} from 'react';
-import {
-  View,
-  FlatList,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
-import {Screen, ChatBubble, AppText} from '../../ui/primitives';
-import {spacing, colors} from '../../ui/theme';
-
-type ChatRole = 'user' | 'ai' | 'system';
-
-interface ChatMessage {
-  id: string;
-  role: ChatRole;
-  content: string;
-  createdAt: number;
-}
+import React, {useCallback, useState} from 'react';
+import {View, StyleSheet} from 'react-native';
+import {GiftedChat, IMessage, Bubble, InputToolbar, Send} from 'react-native-gifted-chat';
+import Icon from 'react-native-vector-icons/Feather';
+import {colors, spacing} from '../../ui/theme';
 
 // Мок-история (для MVP)
-const initialMessages: ChatMessage[] = [
+const initialMessages: IMessage[] = [
   {
-    id: '1',
-    role: 'ai',
-    content: 'Я проанализировал данные за последние 3 дня.',
-    createdAt: Date.now() - 10000,
+    _id: 3,
+    text: 'Что можно сделать в первую очередь?',
+    createdAt: new Date(Date.now() - 8000),
+    user: {
+      _id: 1,
+      name: 'User',
+    },
   },
   {
-    id: '2',
-    role: 'ai',
-    content: 'Качество сна снизилось, что может влиять на утреннее давление.',
-    createdAt: Date.now() - 9000,
+    _id: 2,
+    text: 'Качество сна снизилось, что может влиять на утреннее давление.',
+    createdAt: new Date(Date.now() - 9000),
+    user: {
+      _id: 2,
+      name: 'AI Assistant',
+      avatar: 'https://ui-avatars.com/api/?name=AI&background=007AFF&color=fff',
+    },
   },
   {
-    id: '3',
-    role: 'user',
-    content: 'Что можно сделать в первую очередь?',
-    createdAt: Date.now() - 8000,
+    _id: 1,
+    text: 'Я проанализировал данные за последние 3 дня.',
+    createdAt: new Date(Date.now() - 10000),
+    user: {
+      _id: 2,
+      name: 'AI Assistant',
+      avatar: 'https://ui-avatars.com/api/?name=AI&background=007AFF&color=fff',
+    },
   },
 ];
 
 export const ChatScreen: React.FC = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
-  const [input, setInput] = useState('');
-  const listRef = useRef<FlatList<ChatMessage>>(null);
+  const [messages, setMessages] = useState<IMessage[]>(initialMessages);
 
-  const sendMessage = useCallback(() => {
-    if (!input.trim()) return;
-
-    const userMessage: ChatMessage = {
-      id: String(Date.now()),
-      role: 'user',
-      content: input,
-      createdAt: Date.now(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
+  const onSend = useCallback((newMessages: IMessage[] = []) => {
+    setMessages(previousMessages =>
+      GiftedChat.append(previousMessages, newMessages),
+    );
 
     // MVP-заглушка ответа AI
     setTimeout(() => {
-      const aiMessage: ChatMessage = {
-        id: String(Date.now() + 1),
-        role: 'ai',
-        content:
-          'Рекомендую начать со стабилизации сна и снижения нагрузки на 1–2 дня.',
-        createdAt: Date.now(),
+      const aiResponse: IMessage = {
+        _id: Date.now(),
+        text: 'Рекомендую начать со стабилизации сна и снижения нагрузки на 1–2 дня.',
+        createdAt: new Date(),
+        user: {
+          _id: 2,
+          name: 'AI Assistant',
+          avatar: 'https://ui-avatars.com/api/?name=AI&background=007AFF&color=fff',
+        },
       };
-      setMessages(prev => [...prev, aiMessage]);
+      setMessages(previousMessages =>
+        GiftedChat.append(previousMessages, [aiResponse]),
+      );
     }, 600);
-  }, [input]);
+  }, []);
 
-  const renderItem = ({item}: {item: ChatMessage}) => (
-    <ChatBubble role={item.role}>{item.content}</ChatBubble>
+  const renderBubble = (props: any) => (
+    <Bubble
+      {...props}
+      wrapperStyle={{
+        right: {
+          backgroundColor: colors.primary,
+        },
+        left: {
+          backgroundColor: colors.surface,
+        },
+      }}
+      textStyle={{
+        right: {
+          color: '#fff',
+        },
+        left: {
+          color: colors.text,
+        },
+      }}
+    />
+  );
+
+  const renderInputToolbar = (props: any) => (
+    <InputToolbar
+      {...props}
+      containerStyle={styles.inputToolbar}
+      primaryStyle={styles.inputPrimary}
+    />
+  );
+
+  const renderSend = (props: any) => (
+    <Send {...props} containerStyle={styles.sendContainer}>
+      <Icon name="send" size={24} color={colors.primary} />
+    </Send>
   );
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={80}>
-      <Screen scrollable={false}>
-        <FlatList
-          ref={listRef}
-          data={messages}
-          keyExtractor={item => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
-          onContentSizeChange={() =>
-            listRef.current?.scrollToEnd({animated: true})
-          }
-        />
-      </Screen>
-
-      {/* ===== Input Bar ===== */}
-      <View style={styles.inputBar}>
-        <TextInput
-          value={input}
-          onChangeText={setInput}
-          placeholder="Напишите сообщение…"
-          placeholderTextColor={colors.textSecondary}
-          style={styles.input}
-        />
-        <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
-          <AppText style={styles.sendText}>Отправить</AppText>
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+    <View style={styles.container}>
+      <GiftedChat
+        messages={messages}
+        onSend={onSend}
+        user={{
+          _id: 1,
+          name: 'User',
+        }}
+        renderBubble={renderBubble}
+        renderInputToolbar={renderInputToolbar}
+        renderSend={renderSend}
+        isSendButtonAlwaysVisible
+        messagesContainerStyle={{
+          paddingBottom: spacing.md,
+        }}
+        textInputProps={{
+          placeholder: 'Напишите сообщение…',
+        }}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
   },
-  listContent: {
-    paddingBottom: spacing.lg,
-  },
-  inputBar: {
-    flexDirection: 'row',
-    padding: spacing.sm,
+  inputToolbar: {
     borderTopWidth: 1,
-    borderColor: colors.border,
+    borderTopColor: colors.border,
     backgroundColor: colors.surface,
-  },
-  input: {
-    flex: 1,
-    padding: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    color: colors.text,
-    fontSize: 16,
-  },
-  sendButton: {
-    marginLeft: spacing.sm,
-    justifyContent: 'center',
     paddingHorizontal: spacing.sm,
   },
-  sendText: {
-    color: colors.primary,
-    fontWeight: '600',
+  inputPrimary: {
+    alignItems: 'center',
+  },
+  sendContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.sm,
+    marginBottom: spacing.sm,
   },
 });
