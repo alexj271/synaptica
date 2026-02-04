@@ -12,6 +12,26 @@ import {ProfileScreen} from '../screens/Profile';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
+const HomeTabIcon = ({color, size}: {color: string; size: number}) => (
+  <Icon name="home" color={color} size={size} />
+);
+
+const ChatTabIcon = ({color, size}: {color: string; size: number}) => (
+  <Icon name="message-square" color={color} size={size} />
+);
+
+const PlanTabIcon = ({color, size}: {color: string; size: number}) => (
+  <Icon name="check-square" color={color} size={size} />
+);
+
+const DataTabIcon = ({color, size}: {color: string; size: number}) => (
+  <Icon name="bar-chart-2" color={color} size={size} />
+);
+
+const ProfileTabIcon = ({color, size}: {color: string; size: number}) => (
+  <Icon name="user" color={color} size={size} />
+);
+
 function MainTabs() {
   return (
     <Tab.Navigator
@@ -24,9 +44,7 @@ function MainTabs() {
         component={DashboardScreen}
         options={{
           tabBarLabel: 'Главная',
-          tabBarIcon: ({color, size}) => (
-            <Icon name="home" color={color} size={size} />
-          ),
+          tabBarIcon: HomeTabIcon,
         }}
       />
       <Tab.Screen
@@ -34,9 +52,7 @@ function MainTabs() {
         component={ChatScreen}
         options={{
           tabBarLabel: 'Чат',
-          tabBarIcon: ({color, size}) => (
-            <Icon name="message-square" color={color} size={size} />
-          ),
+          tabBarIcon: ChatTabIcon,
         }}
       />
       <Tab.Screen
@@ -44,9 +60,7 @@ function MainTabs() {
         component={PlanScreen}
         options={{
           tabBarLabel: 'План',
-          tabBarIcon: ({color, size}) => (
-            <Icon name="check-square" color={color} size={size} />
-          ),
+          tabBarIcon: PlanTabIcon,
         }}
       />
       <Tab.Screen
@@ -54,9 +68,7 @@ function MainTabs() {
         component={DataScreen}
         options={{
           tabBarLabel: 'Данные',
-          tabBarIcon: ({color, size}) => (
-            <Icon name="bar-chart-2" color={color} size={size} />
-          ),
+          tabBarIcon: DataTabIcon,
         }}
       />
       <Tab.Screen
@@ -64,9 +76,7 @@ function MainTabs() {
         component={ProfileScreen}
         options={{
           tabBarLabel: 'Профиль',
-          tabBarIcon: ({color, size}) => (
-            <Icon name="user" color={color} size={size} />
-          ),
+          tabBarIcon: ProfileTabIcon,
         }}
       />
     </Tab.Navigator>

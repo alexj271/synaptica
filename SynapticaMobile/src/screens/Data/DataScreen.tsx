@@ -1,5 +1,5 @@
 import React from 'react';
-import {Screen, AppText, Section, EmptyState} from '../../ui/primitives';
+import {Screen, Section, EmptyState} from '../../ui/primitives';
 
 export const DataScreen: React.FC = () => {
   return (

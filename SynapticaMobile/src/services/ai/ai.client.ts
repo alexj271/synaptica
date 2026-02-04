@@ -1,6 +1,6 @@
 export class AIClient {
   // TODO: Implement AI client
-  async chat(message: string): Promise<string> {
+  async chat(_message: string): Promise<string> {
     return 'Response';
   }
 }
