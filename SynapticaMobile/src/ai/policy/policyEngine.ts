@@ -2,11 +2,9 @@ import {POLICY} from './policyRegistry'
 import {needsUserConfirmation} from './confirmationPolicy'
 import {violatesCooldown, registerIntervention} from './interventionLimits'
 import {scoreAction} from './riskScoring'
+import type {AIResponse} from '@/ai/schemas/aiResponse.schema'
 
-export type DomainAction = {
-  type: string
-  payload: unknown
-}
+export type DomainAction = AIResponse['domainActions'][number]
 
 export function evaluateActions(actions: DomainAction[]) {
   const approved: DomainAction[] = []

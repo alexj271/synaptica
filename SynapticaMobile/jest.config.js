@@ -7,6 +7,6 @@ module.exports = {
     ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native|@react-navigation|@reduxjs/toolkit|immer|uuid)/)',
+    'node_modules/(?!((jest-)?react-native|@react-native|@react-navigation|@reduxjs/toolkit|immer|uuid|react-native-quick-sqlite)/)',
   ],
 };

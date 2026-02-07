@@ -27,14 +27,23 @@ describe('model router', () => {
     expect(canUseModel(MODELS.DEEP)).toBe(false)
   })
 
-  it('routes model based on intent and context size', async () => {
+  it('routes model based on intent', async () => {
     const result = await routeModel({
       intent: 'journal_parse',
-      context: {text: 'hello'},
     })
 
     expect(result.model).toEqual(MODELS.FAST)
     expect(result.complexity).toBe('trivial')
+  })
+
+  it('routes deep when contextSize is large', async () => {
+    const result = await routeModel({
+      intent: 'plan_update',
+      contextSize: 3000,
+    })
+
+    expect(result.model).toEqual(MODELS.DEEP)
+    expect(result.complexity).toBe('deep')
   })
 
   it('downgrades to FAST when budget exceeded', async () => {
@@ -43,7 +52,7 @@ describe('model router', () => {
 
     const result = await routeModel({
       intent: 'plan_update',
-      context: {text: 'x'.repeat(3000)},
+      contextSize: 3000,
     })
 
     expect(result.model).toEqual(MODELS.FAST)

@@ -5,14 +5,14 @@ import {ModelProfile} from './modelProfiles'
 
 export async function routeModel({
   intent,
-  context,
+  contextSize,
 }: {
   intent: string
-  context: unknown
+  contextSize?: number
 }): Promise<{model: ModelProfile; complexity: string}> {
   const complexity = detectComplexity(
     intent,
-    JSON.stringify(context).length,
+    contextSize ?? 0,
   )
 
   let model = selectModel(complexity)

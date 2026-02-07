@@ -1,67 +1,65 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useEffect, useMemo} from 'react';
 import {View, StyleSheet} from 'react-native';
 import {GiftedChat, IMessage, Bubble, InputToolbar, Send} from 'react-native-gifted-chat';
 import Icon from 'react-native-vector-icons/Feather';
 import {colors, spacing} from '../../ui/theme';
+import {useAppDispatch, useAppSelector} from '../../hooks';
+import {messageSent, initChat, loadEarlierMessages} from '../../modules/features/chat/chatSlice';
 
-// Мок-история (для MVP)
-const initialMessages: IMessage[] = [
-  {
-    _id: 3,
-    text: 'Что можно сделать в первую очередь?',
-    createdAt: new Date(Date.now() - 8000),
-    user: {
-      _id: 1,
-      name: 'User',
-    },
-  },
-  {
-    _id: 2,
-    text: 'Качество сна снизилось, что может влиять на утреннее давление.',
-    createdAt: new Date(Date.now() - 9000),
-    user: {
-      _id: 2,
-      name: 'AI Assistant',
-      avatar: 'https://ui-avatars.com/api/?name=AI&background=007AFF&color=fff',
-    },
-  },
-  {
-    _id: 1,
-    text: 'Я проанализировал данные за последние 3 дня.',
-    createdAt: new Date(Date.now() - 10000),
-    user: {
-      _id: 2,
-      name: 'AI Assistant',
-      avatar: 'https://ui-avatars.com/api/?name=AI&background=007AFF&color=fff',
-    },
-  },
-];
+const AI_USER = {
+  _id: 2,
+  name: 'AI Assistant',
+  avatar: 'https://ui-avatars.com/api/?name=AI&background=007AFF&color=fff',
+};
+
+const CURRENT_USER = {
+  _id: 1,
+  name: 'User',
+};
 
 export const ChatScreen: React.FC = () => {
-  const [messages, setMessages] = useState<IMessage[]>(initialMessages);
+  const dispatch = useAppDispatch();
+  const chatMessages = useAppSelector(state => state.chat.messages);
+  const isLoading = useAppSelector(state => state.chat.isLoading);
+  const initialized = useAppSelector(state => state.chat.initialized);
+  const hasEarlier = useAppSelector(state => state.chat.hasEarlier);
+  const loadingEarlier = useAppSelector(state => state.chat.loadingEarlier);
 
-  const onSend = useCallback((newMessages: IMessage[] = []) => {
-    setMessages(previousMessages =>
-      GiftedChat.append(previousMessages, newMessages),
-    );
+  // При монтировании — загрузить последние сообщения из SQLite
+  useEffect(() => {
+    if (!initialized) {
+      dispatch(initChat());
+    }
+  }, [dispatch, initialized]);
 
-    // MVP-заглушка ответа AI
-    setTimeout(() => {
-      const aiResponse: IMessage = {
-        _id: Date.now(),
-        text: 'Рекомендую начать со стабилизации сна и снижения нагрузки на 1–2 дня.',
-        createdAt: new Date(),
-        user: {
-          _id: 2,
-          name: 'AI Assistant',
-          avatar: 'https://ui-avatars.com/api/?name=AI&background=007AFF&color=fff',
-        },
-      };
-      setMessages(previousMessages =>
-        GiftedChat.append(previousMessages, [aiResponse]),
-      );
-    }, 600);
-  }, []);
+  const messages: IMessage[] = useMemo(
+    () =>
+      [...chatMessages]
+        .reverse()
+        .map(msg => ({
+          _id: msg.id,
+          text: msg.text,
+          createdAt: new Date(msg.timestamp),
+          user: msg.role === 'user' ? CURRENT_USER : AI_USER,
+        })),
+    [chatMessages],
+  );
+
+  const onSend = useCallback(
+    (newMessages: IMessage[] = []) => {
+      const text = newMessages[0]?.text;
+      if (!text) return;
+
+      dispatch(messageSent({text, timestamp: Date.now()}));
+    },
+    [dispatch],
+  );
+
+  const onLoadEarlier = useCallback(() => {
+    if (!loadingEarlier && hasEarlier) {
+      dispatch(loadEarlierMessages());
+    }
+  }, [dispatch, loadingEarlier, hasEarlier]);
 
   const renderBubble = (props: any) => (
     <Bubble
@@ -104,9 +102,14 @@ export const ChatScreen: React.FC = () => {
       <GiftedChat
         messages={messages}
         onSend={onSend}
-        user={{
-          _id: 1,
-          name: 'User',
+        user={CURRENT_USER}
+        isTyping={isLoading}
+        loadEarlierMessagesProps={{
+          isAvailable: hasEarlier,
+          isLoading: loadingEarlier,
+          onPress: onLoadEarlier,
+          isInfiniteScrollEnabled: true,
+          label: 'Загрузить ранние сообщения',
         }}
         renderBubble={renderBubble}
         renderInputToolbar={renderInputToolbar}
