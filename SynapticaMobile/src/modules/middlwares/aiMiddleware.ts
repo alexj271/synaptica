@@ -1,11 +1,11 @@
 import { Middleware } from '@reduxjs/toolkit'
 import { AIResponseSchema, AIResponse } from '@/ai/schemas/aiResponse.schema'
 import { detectIntent } from '@/ai/intent/detectIntent'
-import { AIIntent } from '@/ai/intent/intent.types'
 import { routeModel } from '@/ai/router/modelRouter'
 import { buildContext } from '@/ai/context/buildContext'
 import { evaluateActions } from '@/ai/policy/policyEngine'
 import { logPolicyDecision } from '@/ai/policy/auditLogger'
+import { callAI } from '@/ai/llm/callAI'
 import type { RootState } from '../store'
 
 /**
@@ -162,27 +162,6 @@ export const aiMiddleware: Middleware =
 
     return result
   }
-
-/**
- * ===============================
- * LLM Call (заглушка)
- * ===============================
- */
-
-async function callAI(params: {
-  model: string
-  intent: AIIntent
-  message?: string
-  context: Record<string, unknown>
-}): Promise<unknown> {
-
-  // ⚠️ MOCK — заменить реальной реализацией
-  return {
-    intent: params.intent,
-    summary: 'AI response placeholder',
-    domainActions: [],
-  }
-}
 
 /**
  * ===============================

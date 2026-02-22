@@ -4,6 +4,7 @@ import * as intentModule from '../../src/ai/intent/detectIntent';
 import * as routerModule from '../../src/ai/router/modelRouter';
 import * as contextModule from '../../src/ai/context/buildContext';
 import * as policyModule from '../../src/ai/policy/policyEngine';
+import * as llmModule from '../../src/ai/llm/callAI';
 import {MODELS} from '../../src/ai/router/modelProfiles';
 
 describe('aiMiddleware', () => {
@@ -31,6 +32,20 @@ describe('aiMiddleware', () => {
       entries: [],
     },
   } as any;
+
+  let callAISpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    callAISpy = jest.spyOn(llmModule, 'callAI').mockResolvedValue({
+      intent: 'chat_general',
+      summary: 'AI response placeholder',
+      domainActions: [],
+    });
+  });
+
+  afterEach(() => {
+    callAISpy.mockRestore();
+  });
 
   it('passes action through next() first (Redux Event)', async () => {
     const dispatch = jest.fn();
@@ -85,6 +100,15 @@ describe('aiMiddleware', () => {
       return {} as any;
     });
 
+    callAISpy.mockImplementation(async () => {
+      callOrder.push('llm');
+      return {
+        intent: 'chat_general',
+        summary: 'ok',
+        domainActions: [],
+      };
+    });
+
     const parseSpy = jest.spyOn(AIResponseSchema, 'parse').mockImplementation((data) => {
       callOrder.push('zod');
       return data as any;
@@ -108,6 +132,7 @@ describe('aiMiddleware', () => {
       'intent',
       'router',
       'context',
+      'llm',
       'zod',
       'policy',
       'reducers',
@@ -151,6 +176,7 @@ describe('aiMiddleware', () => {
   });
 
   it('dispatches requestFailed when Zod validation fails', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
     const parseSpy = jest
       .spyOn(AIResponseSchema, 'parse')
       .mockImplementationOnce(() => {
@@ -174,6 +200,7 @@ describe('aiMiddleware', () => {
     });
 
     parseSpy.mockRestore();
+    consoleSpy.mockRestore();
   });
 
   it('routes high-risk actions through Policy Engine to requiresConfirmation', async () => {

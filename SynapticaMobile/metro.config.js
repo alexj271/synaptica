@@ -9,7 +9,7 @@ const defaultConfig = getDefaultConfig(__dirname);
 const config = mergeConfig(defaultConfig, {});
 
 module.exports = withRozenite(config, {
-  enabled: __DEV__, // ⚠️ скоро станет обязательным
+  enabled: true, // ⚠️ скоро станет обязательным
   enhanceMetroConfig: (config) => withRozeniteReduxDevTools(config),
 });
 
